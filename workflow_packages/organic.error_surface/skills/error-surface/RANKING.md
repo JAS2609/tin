@@ -123,13 +123,15 @@ def searchability(message):
     runs = invariant_runs(text)
     words = max((_WORD.findall(run) for run in runs), key=len, default=[])
     codes = code_tokens(text)
-    # Without a code, a fragment shorter than three words cannot identify a product.
-    if not codes and len(words) < 3:
+    distinctive = [word for word in words if word.lower() not in GENERIC_TOKENS]
+    # Without a code, a fragment needs three words and at least one that is not a stock
+    # error word. Length alone is not identity: "Something went wrong" clears the word
+    # count and is still the most-written sentence on the internet.
+    if not codes and (len(words) < 3 or not distinctive):
         return 0
     score = 40 if codes else 0
     score += _length_credit(len(words))
     if words:
-        distinctive = [word for word in words if word.lower() not in GENERIC_TOKENS]
         score += round(25 * len(distinctive) / len(words))
     score -= round(20 * _placeholder_fraction(text))
     return max(0, min(100, score))

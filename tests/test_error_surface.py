@@ -99,10 +99,20 @@ def test_operator_weight_is_validated(ranking, invalid):
         "${detail}",
         "",
         "   ",
+        "Something went wrong",  # long enough, but every word is a stock error word
+        "An unexpected error occurred. Please try again.",
     ],
 )
 def test_messages_a_user_could_never_find_score_zero(ranking, message):
     assert ranking["searchability"](message) == 0
+
+
+def test_one_distinctive_word_is_enough_to_separate_a_query(ranking):
+    found = ranking["searchability"]
+    # "User" is not a stock error word; "Something went wrong" has nothing of its own.
+    assert found("User not found") > 0
+    assert found("Failed to redeploy") > 0
+    assert found("Something went wrong") == 0
 
 
 def test_placeholders_cost_a_message_its_searchable_core(ranking):
